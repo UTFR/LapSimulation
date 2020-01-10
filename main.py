@@ -1,11 +1,11 @@
-import Car_Objects
-import Comp_Controller
-#from michigan import Michigan
+from car import Car
+from competition import Competition
+from michigan import Michigan
 
 def main():
-	car = Car_Objects.Car() #inputs tbd
-	comp = Michigan()
-	# endurance_time = michigan.endurance_calc(car)
+	car = Car() #inputs tbd
+	comp = Michigan(car)
+	endurance_time = comp.run_endurance()
 	# print(endurance_time)
 
 
