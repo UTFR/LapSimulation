@@ -7,6 +7,7 @@ from graph import Graph
 from label import Label
 from entry import Entry
 
+
 class GUI_Manager:
 	frame = None
 	root = None
@@ -15,22 +16,21 @@ class GUI_Manager:
 
 	def __init__(self):
 		self.root = tk.Tk()
-		self.root.wm_title("Embedding in Tk")
+		self.root.wm_title("Laptime Simulator")
 		# root.geometry("500x500")
 		self.frame = ttk.Frame(self.root)
-		self.frame.pack()
-
+		self.frame.grid()
 		notebook = self.create_general_notebook()
 		self.create_car_page(notebook, 0)
-		self.create_design_page(notebook,1)
+		self.create_design_page(notebook, 1)
 
 		self.root.mainloop()
 
 	def create_general_notebook(self):
 		n = Notebook(self.frame)
-		n.add_pages(['Car','Design','Simulate','Analysis'])
+		n.add_pages(['Car', 'Design', 'Simulate', 'Analysis'])
+		n.place_object(1,1)
 		return n
-
 
 	def create_car_page(self, notebook, page_num):
 		frame = notebook.get_frame(page_num)
@@ -87,8 +87,7 @@ class GUI_Manager:
 
 		self.label_dict["Wheel Base"] = Label(aero_frame, "TBD")
 
-
-	def create_design_page(self,notebook,page_num):
+	def create_design_page(self, notebook, page_num):
 		frame = notebook.get_frame(page_num)
 
 		variable = StringVar(frame)
@@ -96,10 +95,27 @@ class GUI_Manager:
 
 		w1 = ttk.OptionMenu(frame, variable, "Mass","Brake Bias", "C.O.G. Height", "Brake Bias", "Weight Dist.",\
 			"Aero Balance","Frontal Area","Downforce","Drag","Wheel Base","Lat Tire","Long Tire","Wheel Radius")
-		w1.pack()
+		w1.grid(row = 1, column = 0, sticky = W, pady = 2)
 
 		w2 = ttk.OptionMenu(frame, variable, "Mass","Brake Bias", "C.O.G. Height", "Brake Bias", "Weight Dist.",\
 			"Aero Balance","Frontal Area","Downforce","Drag","Wheel Base","Lat Tire","Long Tire","Wheel Radius")
-		w2.pack()
+		w2.grid(row = 2, column = 0, sticky = W, pady = 2)
+
+		w3 = ttk.Entry(frame)
+		w3.grid(row = 1, column = 1, sticky = W, pady = 2)
+
+		w4 = ttk.Entry(frame)
+		w4.grid(row = 2, column = 1, sticky = W, pady = 2)
+
+	def create_Simulate_page(self,  notebook, page_num):
+		frame = notebook.get_frame(page_num)
+
+		variable = StringVar(frame)
+		variable.set("Mass")
+
+
+
+
+
 
 

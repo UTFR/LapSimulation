@@ -14,8 +14,8 @@ LONG_TIRE = 1
 WHEEL_RADIUS = 0.229
 AERO_BALANCE = 0.5
 BRAKE_BIAS = 0.7
-LIFT_COEF = 2.5 #this is also called CL
-CD = 0 #drag coefficient --> 1.3
+LIFT_COEF = 2.5  # this is also called CL
+CD = 0  # drag coefficient --> 1.3
 
 AIR_DENSITY = 1.225
 GRAVITY = 9.81

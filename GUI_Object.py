@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+
 class GUI_Object:
 
 	frame = None
@@ -14,6 +15,6 @@ class GUI_Object:
 
 	def create_object(self):
 		pass
-		
+
 	def place_button(self):
 		pass

@@ -107,9 +107,9 @@ class Car:
 	def rad_s_to_rpm(self, rad_s):
 		return rad_s*30/np.pi
 
-	def shift_speed(shift_rpm):
+	def shift_speed(self, shift_rpm):
 		for i in range(len(shift_speeds)-1):
-			shift = self.rpm_to_rad_s(shift_rpm)*self.wheel_radius/c.GEAR_RATIOS[i]
+			shift = self.rpm_to_rad_s(shift_rpm) * self.wheel_radius/c.GEAR_RATIOS[i]
 			self.shift_speeds[i] = shift
 
 	def accelerate(self):
@@ -139,7 +139,7 @@ class Car:
 				#exact = score == self.shift_speeds[gear_index] <-- might need for later use?
 				gear = self.shift_speeds[gear_index] #check if fancy schmancy bisect_left func works
 				car_rpm = wheel_rpm*gear
-				
+
 				torque_index = bisect_left(c.TORQUE_CURVE[0], car_rpm)
 				if (car_rpm == c.TORQUE_CURVE[torque_index][1]):
 					torque = c.TORQUE_CURVE[torque_index][1]
@@ -273,7 +273,7 @@ class Car:
 				velo = max_velo
 				break
 			else:
-				downforce = c.LIFT_COEF*velo**2 #double check this
+				downforce = c.LIFT_COEF*velo**2  # double check this
 				lat_force = (self.mass*c.F_G + downforce)*self.lat_tire
 				new_accel = lat_force/self.mass
 				error = np.absolute(new_accel - accel)
@@ -308,7 +308,7 @@ class Car:
 			print("%d m straight is too short!",length)
 
 		time = (self.accel_time[c]-self.accel_time[a]) + (self.deccel_time[b]-self.deccel_time[d])
-		
+
 		return time
 
 
@@ -329,4 +329,4 @@ class Car:
 
 
 
-		
+

@@ -17,9 +17,9 @@ class Label(GUI_Object):
 		print("pressed")
 
 	def create_object(self, text):
-		self.label =ttk.Label(self.frame, text=text)
+		self.label = ttk.Label(self.frame, text=text)
 		self.label.pack(side="left")
 		self.label.pack(side="bottom")
-		
-	def place_object(self,x,y,height=100,width=100):
+
+	def place_object(self, x, y, height=100, width=100):
 		pass
