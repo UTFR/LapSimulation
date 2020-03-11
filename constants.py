@@ -3,19 +3,18 @@ Constants.py
 """
 
 
-F_G = 9.81
-WEIGHT_DIST = 0#static weight dist 50-50%
-COG_HEIGHT = 0.27
-WHEEL_BASE = 1.6
-FRONTAL_AREA = 1.25#0.98
-MASS = 251.45
-LAT_TIRE = 1.6
-LONG_TIRE = 1
+WEIGHT_DIST = 0 #static weight dist 50-50%
+COG_HEIGHT = 0.27 #center of gravity height
+WHEEL_BASE = 1.6 #base area of the wheel
+FRONTAL_AREA = 1.25#0.98 area of the front of the car (used for aero)
+MASS = 251.45 #mass of car
+LAT_TIRE = 1.6 #coefficient of friction
+LONG_TIRE = 1 #coefficient of frinction
 WHEEL_RADIUS = 0.229
-AERO_BALANCE = 0.5
-BRAKE_BIAS = 0.7
+AERO_BALANCE = 0.5 #balance between front and back of the car due to aero
+BRAKE_BIAS = 0.7 #ratio of braking force between front and rear brakes
 LIFT_COEF = 2.5 #this is also called CL
-CD = 0 #drag coefficient --> 1.3
+CD = 1.3 #drag coefficient --> 1.3
 
 AIR_DENSITY = 1.225
 GRAVITY = 9.81

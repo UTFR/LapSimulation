@@ -12,7 +12,7 @@ class Graph(GUI_Object):
 	def __init__(self,frame):
 		super().__init__(frame)
 
-	def plot_2_param(self, param_x, param_y, x=5, y=4):
+	def plot_2_param(self, param_x, param_y, x=2, y=3):
 		fig = plt.Figure(figsize=(x,y))
 		fig.add_subplot(111).plot(param_x, param_y)
 		self.draw_plot(fig)

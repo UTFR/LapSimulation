@@ -17,7 +17,7 @@ class Entry(GUI_Object):
 		self.entry = ttk.Entry(self.frame,text=text, width=width)
 		# self.entry.insert(0,"")
 		self.entry.pack(side='left')
-		self.entry.pack(side="bottom")
+		self.entry.pack(side="top")
 		
 	def place_object(self,x,y,height=100,width=100):
 		pass

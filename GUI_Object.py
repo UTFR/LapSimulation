@@ -9,9 +9,6 @@ class GUI_Object:
 	def __init__(self, frame):
 		self.frame = frame
 
-	def object_callback(self):
-		pass
-
 	def create_object(self):
 		pass
 		

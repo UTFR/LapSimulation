@@ -2,6 +2,7 @@ import constants as c
 import numpy as np
 from bisect import bisect_left
 import math
+from car_helpers import *
 
 class Car:
 	weight_dist = c.WEIGHT_DIST
@@ -14,9 +15,10 @@ class Car:
 	wheel_radius = c.WHEEL_RADIUS
 	aero_balance = c.AERO_BALANCE
 	brake_bias = c.BRAKE_BIAS
+	final_ratios = []
 
 	step_size = 0.01
-	shift_speeds = [0,0,0,0,math.inf] #figure out what these should be, math.inf is for bisect_left
+	shift_speeds = [0,0,0,0,math.inf] #math.inf is for bisect_left
 	accel_vel = [] #figure out what to do with this?
 	deccel_vel = [] #figure out what to do with this?
 	accel_dist = [] #figure out what to do with this?
@@ -26,6 +28,9 @@ class Car:
 
 	def __init__(self):
 		print("hi")
+		self.final_ratios()
+		self.shift_speed(10000)
+		print(self.shift_speeds)
 
 		accel_dist, time_out_accel, velo_out_accel, accel_out, _ = self.accelerate()
 		decel_dist, time_out_decel, velo_out_decel, accel_out, _, _, _, _ = self.decelerate()
@@ -101,20 +106,30 @@ class Car:
 		index = TORQUE_CURVE[0].index(rpm)
 		TORQUE_CURVE[1].index
 
+	def final_ratios(self):
+		self.final_ratios = np.zeros(len(c.GEAR_RATIOS))
+		for i in range(len(self.final_ratios)):
+			self.final_ratios[i] = c.GEAR_RATIOS[i]*c.GEAR_RATIOS[-1]
+
 	def rpm_to_rad_s(self, rpm):
 		return rpm*(np.pi)/30
 
 	def rad_s_to_rpm(self, rad_s):
 		return rad_s*30/np.pi
 
-	def shift_speed(shift_rpm):
-		for i in range(len(shift_speeds)-1):
-			shift = self.rpm_to_rad_s(shift_rpm)*self.wheel_radius/c.GEAR_RATIOS[i]
+	def shift_speed(self,shift_rpm):
+		for i in range(len(self.shift_speeds)-1):
+			print(self.wheel_radius,self.final_ratios[i])
+			shift = self.rpm_to_rad_s(shift_rpm)*self.wheel_radius/self.final_ratios[i]
 			self.shift_speeds[i] = shift
 
+	def linear_interpolation(self,torque_index,car_rpm):
+		torque_low = c.TORQUE_CURVE[1][torque_index-1]
+		torque_high = c.TORQUE_CURVE[1][torque_index+1]
+		return ((torque_high-torque_low)/500)*(car_rpm-c.TORQUE_CURVE[1][torque_index-1]) + torque_low
+
 	def accelerate(self):
-		min_velocity = self.rpm_to_rad_s(3000)*self.wheel_radius/c.GEAR_RATIOS[0]
-		max_gear_velocity = self.rpm_to_rad_s(10500)*self.wheel_radius/c.GEAR_RATIOS[4]
+		#init variables
 		velo = 0
 		accel = 0
 		index = 0
@@ -129,26 +144,35 @@ class Car:
 		force_e_out = []
 		accel_out = []
 
+		#calculate the min/max velocity car can reach
+		min_velocity = self.rpm_to_rad_s(3000)*self.wheel_radius/self.final_ratios[0]
+		max_gear_velocity = self.rpm_to_rad_s(10500)*self.wheel_radius/self.final_ratios[4]
+
+		#is car stil accelerating/can still accelerate?
 		while (accel >= 0 and (velo < max_gear_velocity)):
+			#get the torque and gear number depending on rpm
 			if (velo < min_velocity):
-				torque = c.TORQUE_CURVE[1][2]
-				gear = c.GEAR_RATIOS[1]
+				#first gear
+				torque = c.TORQUE_CURVE[1][0]
+				gear = self.final_ratios[0]
 			else:
 				wheel_rpm = self.rad_s_to_rpm(velo/self.wheel_radius)
+				#pick gear based on which range wheel_rpm is in
 				gear_index = bisect_left(self.shift_speeds, velo)
-				#exact = score == self.shift_speeds[gear_index] <-- might need for later use?
 				gear = self.shift_speeds[gear_index] #check if fancy schmancy bisect_left func works
+				#car_rpm is rpm after shifting gears
 				car_rpm = wheel_rpm*gear
-				
-				torque_index = bisect_left(c.TORQUE_CURVE[0], car_rpm)
-				if (car_rpm == c.TORQUE_CURVE[torque_index][1]):
-					torque = c.TORQUE_CURVE[torque_index][1]
+				print(car_rpm)
+				print("hi")
+				print(c.TORQUE_CURVE[0])
+				#get torque
+				torque_index = bisect_left(c.TORQUE_CURVE[0], car_rpm) #this line is questionable at best
+				print(torque_index)
+				if (car_rpm == c.TORQUE_CURVE[0][torque_index]):
+					torque = c.TORQUE_CURVE[1][torque_index]
 				else:
-					torque_low = c.TORQUE_CURVE[torque_index-1][1]
-					torque_high = c.TORQUE_CURVE[torque_index+1][1]
-					#wtf is going on here --> make it shorter?
-					torque = ((torque_high-torque_low)/500)*(car_rpm-c.TORQUE_CURVE[1][torque_index-1]) + torque_low
-
+					torque = self.linear_interpolation(torque_index,car_rpm)
+			#get weight transfer
 			if (velo == 0):
 				weight_transfer = 0
 			else:
@@ -160,12 +184,14 @@ class Car:
 			force_n = (self.mass/2)*c.GRAVITY + weight_transfer + downforce/2 #tf is this?
 			force_tire_max = force_n*self.long_tire
 
+			#determine if wheel is gripping road
 			if (force_e > force_tire_max):
 				force_applied = force_tire_max
-				print(spinning)
+				print("spinning")
 			else:
 				force_applied = force_e
 
+			#save + update values
 			new_accel = (force_applied-drag)/self.mass
 			distance.append(self.step_size*index) #what?
 			if (index == 0):
@@ -174,7 +200,7 @@ class Car:
 			else:
 				vel_final = np.sqrt(velo**2 + 2*new_accel*self.step_size)
 				time_out.append((vel_final - velo)/new_accel + time_out[index-1])
-				velo_out.append(vel_final*3.6) #where does 3.6 come from?
+				velo_out.append(vel_final*3.6) #<-- 3.6 is converting from m/s to km/h
 				velo = vel_final
 
 			force_e_out.append(force_e)
@@ -187,7 +213,7 @@ class Car:
 
 
 	def decelerate(self):
-		velo = self.rpm_to_rad_s(10500)*self.wheel_radius/c.GEAR_RATIOS[4]
+		velo = self.rpm_to_rad_s(10500)*self.wheel_radius/self.final_ratios[0]
 		index = 0
 
 		static_mass_fr = self.mass*self.weight_dist
@@ -240,6 +266,7 @@ class Car:
 
 			accel = f_app_brakes/self.mass
 			accel_true = accel+(drag/self.mass)
+			print("Ree",velo,accel_true)
 			vel_new = np.sqrt(velo**2 - 2*accel_true*self.step_size)
 			time = np.abs(vel_new-velo)/accel_true
 			distance.append(self.step_size*index)
@@ -264,7 +291,7 @@ class Car:
 	def corner_calc(self, radius, corner_len):
 		new_accel = 1
 		error = 1;
-		max_velo = self.rpm_to_rad_s(c.TORQUE_CURVE[1][-1])*self.wheel_radius/c.GEAR_RATIOS[-2]
+		max_velo = self.rpm_to_rad_s(c.TORQUE_CURVE[1][-1])*self.wheel_radius/self.final_ratios[-2]
 
 		while(error > 0.001):
 			accel = new_accel

@@ -19,7 +19,7 @@ class Label(GUI_Object):
 	def create_object(self, text):
 		self.label =ttk.Label(self.frame, text=text)
 		self.label.pack(side="left")
-		self.label.pack(side="bottom")
+		self.label.pack(side="top")
 		
 	def place_object(self,x,y,height=100,width=100):
 		pass
