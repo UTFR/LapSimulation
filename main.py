@@ -1,13 +1,13 @@
-from car import Car
-from competition import Competition
-from michigan import Michigan
+from Car.car import Car
+from Competitions.competition import Competition
+from Competitions.michigan import Michigan
+
 
 def main():
-	car = Car() #inputs tbd
+	car = Car()  # inputs tbd
 	comp = Michigan(car)
 	endurance_time = comp.run_endurance()
 	# print(endurance_time)
-
 
 
 if __name__ == '__main__':

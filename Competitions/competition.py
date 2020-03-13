@@ -1,11 +1,15 @@
 import constants as c
+import Car.car as car
 from bisect import bisect_left
 import numpy as np
+from Car import Parameters
 
 class Competition:
 	data_corner = c.DATA_CORNER
 	data_straight = c.DATA_STRAIGHT
 	car = None
+
+	Parameters()
 
 	def __init__(self, input_car):
 		self.car = input_car
@@ -19,7 +23,7 @@ class Competition:
 
 		straight_times = np.zeros(len(self.data_straight[1]))
 		for i in range(len(self.data_straight[1])):
-			if (i == 1):
+			if i == 1:
 				straight_times[i] = self.car.straight_calc(self.data_straight[1][i],corner_velos[-1],corner_velos[i])
 			else:
 				straight_times[i] = self.car.straight_calc(self.data_straight[1][i],corner_velos[i-1],corner_velos[i])
@@ -29,13 +33,13 @@ class Competition:
 
 	def run_accel(self):
 		index = bisect_left(car.accel_dist, 75)
-		time_car = car.accel_time[index]
+		time = car.accel_time[index]
 		return time
 
 	def run_skidpad(self):
 		radius = 8.375
 		length = 2*np.pi*radius
-		time,unused = car.corner_calc(radius,length)
+		time, unused = car.corner_calc(radius,length)
 		return time
 
 	def endurance_points_calc(self, time, worst_time):
@@ -58,6 +62,3 @@ class Competition:
 
 		accel_score = 95.5*((Tmax/time) - 1)/((Tmax/Tmin) - 1) + 4.5
 		return accel_score
-
-
-

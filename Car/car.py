@@ -16,12 +16,12 @@ class Car:
 	brake_bias = c.BRAKE_BIAS
 
 	step_size = 0.01
-	shift_speeds = [0,0,0,0,math.inf] #figure out what these should be, math.inf is for bisect_left
-	accel_vel = [] #figure out what to do with this?
-	deccel_vel = [] #figure out what to do with this?
-	accel_dist = [] #figure out what to do with this?
-	accel_time = [] #figure out what to do with this?
-	deccel_time = [] #figure out what to do with this?
+	shift_speeds = [0, 0, 0, 0, math.inf]  # figure out what these should be, math.inf is for bisect_left
+	accel_vel = []    # figure out what to do with this?
+	deccel_vel = []   # figure out what to do with this?
+	accel_dist = []   # figure out what to do with this?
+	accel_time = []   # figure out what to do with this?
+	deccel_time = []  # figure out what to do with this?
 	deccel_dist = []
 
 	def __init__(self):
@@ -83,19 +83,19 @@ class Car:
 		self.wheel_radius = wheel_radius
 
 	def get_wheel_radius(self):
-		return wheel_radius
+		return self.wheel_radius
 
 	def set_aero_balance(self, aero_balance):
 		self.aero_balance = aero_balance
 
 	def get_aero_balance(self):
-		return aero_balance
+		return self.aero_balance
 
 	def set_brake_bias(self, brake_bias):
 		self.brake_bias = brake_bias
 
 	def get_brake_bias(self):
-		return brake_bias
+		return self.brake_bias
 
 	def shift_gears(self, rpm):
 		index = TORQUE_CURVE[0].index(rpm)
@@ -108,8 +108,8 @@ class Car:
 		return rad_s*30/np.pi
 
 	def shift_speed(self, shift_rpm):
-		for i in range(len(shift_speeds)-1):
-			shift = self.rpm_to_rad_s(shift_rpm) * self.wheel_radius/c.GEAR_RATIOS[i]
+		for i in range(len(self.shift_speeds)-1):
+			shift = self.rpm_to_rad_s(shift_rpm)*self.wheel_radius/c.GEAR_RATIOS[i]
 			self.shift_speeds[i] = shift
 
 	def accelerate(self):
@@ -136,17 +136,17 @@ class Car:
 			else:
 				wheel_rpm = self.rad_s_to_rpm(velo/self.wheel_radius)
 				gear_index = bisect_left(self.shift_speeds, velo)
-				#exact = score == self.shift_speeds[gear_index] <-- might need for later use?
-				gear = self.shift_speeds[gear_index] #check if fancy schmancy bisect_left func works
+				# exact = score == self.shift_speeds[gear_index] <-- might need for later use?
+				gear = self.shift_speeds[gear_index]  # check if fancy schmancy bisect_left func works
 				car_rpm = wheel_rpm*gear
-
+				
 				torque_index = bisect_left(c.TORQUE_CURVE[0], car_rpm)
 				if (car_rpm == c.TORQUE_CURVE[torque_index][1]):
 					torque = c.TORQUE_CURVE[torque_index][1]
 				else:
 					torque_low = c.TORQUE_CURVE[torque_index-1][1]
 					torque_high = c.TORQUE_CURVE[torque_index+1][1]
-					#wtf is going on here --> make it shorter?
+					# wtf is going on here --> make it shorter?
 					torque = ((torque_high-torque_low)/500)*(car_rpm-c.TORQUE_CURVE[1][torque_index-1]) + torque_low
 
 			if (velo == 0):
@@ -154,27 +154,27 @@ class Car:
 			else:
 				weight_transfer = accel*self.mass*c.GRAVITY*self.cog_height/self.wheel_base
 
-			downforce = c.LIFT_COEF*velo**2 #check this
+			downforce = c.LIFT_COEF*velo**2  # check this
 			drag = c.CD*velo**2
 			force_e = torque*gear/self.wheel_radius
-			force_n = (self.mass/2)*c.GRAVITY + weight_transfer + downforce/2 #tf is this?
+			force_n = (self.mass/2)*c.GRAVITY + weight_transfer + downforce/2  # tf is this?
 			force_tire_max = force_n*self.long_tire
 
 			if (force_e > force_tire_max):
 				force_applied = force_tire_max
-				print(spinning)
+				print("spinning")
 			else:
 				force_applied = force_e
 
 			new_accel = (force_applied-drag)/self.mass
-			distance.append(self.step_size*index) #what?
+			distance.append(self.step_size*index)  # what?
 			if (index == 0):
 				velo_out.append(0)
 				time_out.append(0)
 			else:
 				vel_final = np.sqrt(velo**2 + 2*new_accel*self.step_size)
 				time_out.append((vel_final - velo)/new_accel + time_out[index-1])
-				velo_out.append(vel_final*3.6) #where does 3.6 come from?
+				velo_out.append(vel_final*3.6)  # where does 3.6 come from?
 				velo = vel_final
 
 			force_e_out.append(force_e)
@@ -184,7 +184,6 @@ class Car:
 			index += 1
 
 		return distance, time_out, velo_out, accel_out, force_e_out
-
 
 	def decelerate(self):
 		velo = self.rpm_to_rad_s(10500)*self.wheel_radius/c.GEAR_RATIOS[4]
@@ -308,25 +307,6 @@ class Car:
 			print("%d m straight is too short!",length)
 
 		time = (self.accel_time[c]-self.accel_time[a]) + (self.deccel_time[b]-self.deccel_time[d])
-
+		
 		return time
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

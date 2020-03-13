@@ -1,7 +1,5 @@
-import constants as c
-from param_enum import Parameters
+from Car.drive.param_enum import Parameters
 import numpy as np
-from Car_Objects.car import Car
 
 
 def select_param(param, value, car):
@@ -19,6 +17,7 @@ def select_param(param, value, car):
 	}
 	param_dict[param]
 
+
 def sweep_1param(min_num, max_num, step_size, param, car):
 	inc=(max_num-min_num+step_size)/step_size
 	nums = np.arange(min_num,max_num,inc)
@@ -33,6 +32,7 @@ def sweep_1param(min_num, max_num, step_size, param, car):
 		points_endurance[i] = endurance_points
 
 	return nums, points_endurance
+
 
 def sweep_2param(min_num, max_num, step_size, param, min_2num, max_2num, step_size2, param2, car):
 	inc1=(max_num-min_num+step_size)/step_size

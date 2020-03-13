@@ -1,6 +1,7 @@
-from GUI_Object import GUI_Object
+from UI.Display.GUI_Object import GUI_Object
 import tkinter as tk
 from tkinter import ttk
+
 
 class Notebook(GUI_Object):
 	frame = None
@@ -35,4 +36,3 @@ class Notebook(GUI_Object):
 		
 	def place_object(self,x,y,height=100,width=100):
 		self.notebook.grid(row=x, column=y, columnspan=6)
-	

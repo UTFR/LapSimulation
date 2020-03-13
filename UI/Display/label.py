@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-from GUI_Object import GUI_Object
+from UI.Display.GUI_Object import GUI_Object
+
 
 class Label(GUI_Object):
 
@@ -20,6 +21,6 @@ class Label(GUI_Object):
 		self.label = ttk.Label(self.frame, text=text)
 		self.label.pack(side="left")
 		self.label.pack(side="bottom")
-
+		
 	def place_object(self, x, y, height=100, width=100):
 		pass
