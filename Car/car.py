@@ -151,8 +151,8 @@ class Car:
 				car_rpm = wheel_rpm*gear
 
 				torque_index = bisect_left(c.TORQUE_CURVE[0], car_rpm)
-				if (car_rpm == c.TORQUE_CURVE[0][torque_index]):
-					torque = c.TORQUE_CURVE[1][torque_index]
+				if (car_rpm == c.TORQUE_CURVE[torque_index][0]):
+					torque = c.TORQUE_CURVE[torque_index][1]
 				else:
 					torque_low = c.TORQUE_CURVE[torque_index-1][1]
 					torque_high = c.TORQUE_CURVE[torque_index+1][1]
