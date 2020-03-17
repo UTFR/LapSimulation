@@ -1,15 +1,13 @@
 import constants as c
 import Car.car as car
-from bisect import bisect_left
+import bisect
 import numpy as np
-from Car import Parameters
+
 
 class Competition:
 	data_corner = c.DATA_CORNER
 	data_straight = c.DATA_STRAIGHT
 	car = None
-
-	Parameters()
 
 	def __init__(self, input_car):
 		self.car = input_car
@@ -32,7 +30,7 @@ class Competition:
 		return time
 
 	def run_accel(self):
-		index = bisect_left(car.accel_dist, 75)
+		index = bisect.bisect_left(car.accel_dist, 75)
 		time = car.accel_time[index]
 		return time
 
@@ -53,7 +51,7 @@ class Competition:
 		Tmin = worst_time
 		Tmax = Tmin * 1.25
 
-		skidpad_score = 71.5((Tmax/time)**2 - 1)/((Tmax/Tmin)**2 - 1) + 3.5
+		skidpad_score = 71.5*((Tmax/time)**2 - 1)/((Tmax/Tmin)**2 - 1) + 3.5
 		return skidpad_score
 
 	def calc_accel_points(self, time, worst_time):

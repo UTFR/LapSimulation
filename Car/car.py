@@ -3,6 +3,7 @@ import numpy as np
 from bisect import bisect_left
 import math
 
+
 class Car:
 	weight_dist = c.WEIGHT_DIST
 	cog_height = c.COG_HEIGHT
@@ -98,8 +99,7 @@ class Car:
 		return self.brake_bias
 
 	def shift_gears(self, rpm):
-		index = TORQUE_CURVE[0].index(rpm)
-		TORQUE_CURVE[1].index
+		index = c.TORQUE_CURVE[0].index(rpm)
 
 	def rpm_to_rad_s(self, rpm):
 		return rpm*(np.pi)/30

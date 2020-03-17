@@ -1,7 +1,3 @@
-import tkinter as tk
-from tkinter import ttk
-
-
 class GUI_Object:
 
 	frame = None

@@ -1,5 +1,4 @@
 from UI.Display.GUI_Object import GUI_Object
-import tkinter as tk
 from tkinter import ttk
 
 

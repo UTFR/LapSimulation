@@ -1,5 +1,4 @@
 from Car.car import Car
-from Competitions.competition import Competition
 from Competitions.michigan import Michigan
 
 

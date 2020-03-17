@@ -1,4 +1,3 @@
-import tkinter as tk
 from tkinter import ttk
 from UI.Display.GUI_Object import GUI_Object
 

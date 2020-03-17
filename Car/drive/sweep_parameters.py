@@ -1,5 +1,6 @@
-from Car.drive.param_enum import Parameters
+import Car.drive.param_enum.Parameters as Parameters
 import numpy as np
+import Competitions.competition.Competition as Competition
 
 
 def select_param(param, value, car):
@@ -26,8 +27,8 @@ def sweep_1param(min_num, max_num, step_size, param, car):
 	for i in range(len(nums)):
 		select_param(param, nums[i], car)
 
-		endurance_time = self.run_endurance()
-		endurance_points = endurance_points_calc(endurance_time)
+		endurance_time = car.run_endurance()
+		endurance_points = Competition.endurance_points_calc(endurance_time)
 
 		points_endurance[i] = endurance_points
 
@@ -37,7 +38,7 @@ def sweep_1param(min_num, max_num, step_size, param, car):
 def sweep_2param(min_num, max_num, step_size, param, min_2num, max_2num, step_size2, param2, car):
 	inc1=(max_num-min_num+step_size)/step_size
 	inc2=(max_2num-min_2num+step_size2)/step_size2
-	nums = np.arange(min_num,max_num,inc)
+	nums = np.arange(min_num,max_num,inc1)
 	nums2 = np.arange(min_2num,max_2num,inc2)
 	select_param(param, car)
 	select_param(param2, car)
@@ -48,23 +49,9 @@ def sweep_2param(min_num, max_num, step_size, param, min_2num, max_2num, step_si
 			select_param(param, nums[i], car)
 			select_param(param2, nums[j], car)
 
-			endurance_time = self.run_endurance()
-			endurance_points = endurance_points_calc(endurance_time)
+			endurance_time = car.run_endurance()
+			endurance_points = Competition.endurance_points_calc(endurance_time)
 
 			points_endurance[i] = endurance_points
 
 	return nums, nums2, points_endurance
-
-
-
-
-
-
-
-
-
-
-
-
-
-
