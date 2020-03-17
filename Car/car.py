@@ -38,6 +38,8 @@ class Car:
 		self.deccel_time = time_out_decel
 		self.deccel_dist = decel_dist
 
+		self.shift_speed(10000)
+
 	def set_weight_dist(self, weight_dist):
 		self.weight_dist = weight_dist
 
@@ -111,6 +113,7 @@ class Car:
 		for i in range(len(self.shift_speeds)-1):
 			shift = self.rpm_to_rad_s(shift_rpm)*self.wheel_radius/c.GEAR_RATIOS[i]
 			self.shift_speeds[i] = shift
+		print(self.shift_speeds)
 
 	def accelerate(self):
 		min_velocity = self.rpm_to_rad_s(3000)*self.wheel_radius/c.GEAR_RATIOS[0]
@@ -129,20 +132,27 @@ class Car:
 		force_e_out = []
 		accel_out = []
 
+		self.shift_speed(10000)
+
 		while (accel >= 0 and (velo < max_gear_velocity)):
 			if (velo < min_velocity):
 				torque = c.TORQUE_CURVE[1][2]
 				gear = c.GEAR_RATIOS[1]
 			else:
 				wheel_rpm = self.rad_s_to_rpm(velo/self.wheel_radius)
+				print(wheel_rpm)
+				print(self.shift_speeds)
 				gear_index = bisect_left(self.shift_speeds, velo)
+				print(gear_index)
 				# exact = score == self.shift_speeds[gear_index] <-- might need for later use?
-				gear = self.shift_speeds[gear_index]  # check if fancy schmancy bisect_left func works
+				gear = self.shift_speeds[gear_index]
+				print(gear)
+				# check if fancy schmancy bisect_left func works
 				car_rpm = wheel_rpm*gear
-				
+
 				torque_index = bisect_left(c.TORQUE_CURVE[0], car_rpm)
-				if (car_rpm == c.TORQUE_CURVE[torque_index][1]):
-					torque = c.TORQUE_CURVE[torque_index][1]
+				if (car_rpm == c.TORQUE_CURVE[0][torque_index]):
+					torque = c.TORQUE_CURVE[1][torque_index]
 				else:
 					torque_low = c.TORQUE_CURVE[torque_index-1][1]
 					torque_high = c.TORQUE_CURVE[torque_index+1][1]
@@ -243,7 +253,7 @@ class Car:
 			time = np.abs(vel_new-velo)/accel_true
 			distance.append(self.step_size*index)
 
-			if(index == 0):
+			if index == 0:
 				velo_out.append(velo)
 				time_out.append(0)
 			else:
@@ -262,7 +272,7 @@ class Car:
 
 	def corner_calc(self, radius, corner_len):
 		new_accel = 1
-		error = 1;
+		error = 1
 		max_velo = self.rpm_to_rad_s(c.TORQUE_CURVE[1][-1])*self.wheel_radius/c.GEAR_RATIOS[-2]
 
 		while(error > 0.001):
@@ -307,6 +317,6 @@ class Car:
 			print("%d m straight is too short!",length)
 
 		time = (self.accel_time[c]-self.accel_time[a]) + (self.deccel_time[b]-self.deccel_time[d])
-		
+
 		return time
 
