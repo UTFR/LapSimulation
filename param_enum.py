@@ -1,6 +1,6 @@
 import enum
 
-class Parameters(Enum.enum):
+class Parameters(enum.enum):
 	weight_dist = 1
 	cog_height = 2
 	wheel_base = 3

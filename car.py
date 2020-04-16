@@ -3,6 +3,7 @@ import numpy as np
 from bisect import bisect_left
 import math
 from car_helpers import *
+import pdb;
 
 class Car:
 	weight_dist = c.WEIGHT_DIST
@@ -30,7 +31,7 @@ class Car:
 		print("hi")
 		self.final_ratios()
 		self.shift_speed(10000)
-		print(self.shift_speeds)
+		#print(shift_speeds, self.shift_speeds)
 
 		accel_dist, time_out_accel, velo_out_accel, accel_out, _ = self.accelerate()
 		decel_dist, time_out_decel, velo_out_decel, accel_out, _, _, _, _ = self.decelerate()
@@ -119,7 +120,7 @@ class Car:
 
 	def shift_speed(self,shift_rpm):
 		for i in range(len(self.shift_speeds)-1):
-			print(self.wheel_radius,self.final_ratios[i])
+			#print(self.wheel_radius,self.final_ratios[i])
 			shift = self.rpm_to_rad_s(shift_rpm)*self.wheel_radius/self.final_ratios[i]
 			self.shift_speeds[i] = shift
 
@@ -127,6 +128,12 @@ class Car:
 		torque_low = c.TORQUE_CURVE[1][torque_index-1]
 		torque_high = c.TORQUE_CURVE[1][torque_index+1]
 		return ((torque_high-torque_low)/500)*(car_rpm-c.TORQUE_CURVE[1][torque_index-1]) + torque_low
+
+	def calc_cl(self, downforce):
+		return 0.5*c.AIR_DENSITY*downforce*self.frontal_area
+
+	def calc_cd(self, drag):
+		return 0.5*c.AIR_DENSITY*drag*self.frontal_area
 
 	def accelerate(self):
 		#init variables
@@ -162,12 +169,12 @@ class Car:
 				gear = self.shift_speeds[gear_index] #check if fancy schmancy bisect_left func works
 				#car_rpm is rpm after shifting gears
 				car_rpm = wheel_rpm*gear
-				print(car_rpm)
-				print("hi")
-				print(c.TORQUE_CURVE[0])
+				#print(car_rpm)
+				#print("hi")
+				#print(c.TORQUE_CURVE[0])
 				#get torque
 				torque_index = bisect_left(c.TORQUE_CURVE[0], car_rpm) #this line is questionable at best
-				print(torque_index)
+				#print(torque_index)
 				if (car_rpm == c.TORQUE_CURVE[0][torque_index]):
 					torque = c.TORQUE_CURVE[1][torque_index]
 				else:
@@ -213,15 +220,17 @@ class Car:
 
 
 	def decelerate(self):
-		velo = self.rpm_to_rad_s(10500)*self.wheel_radius/self.final_ratios[0]
+		velo = self.rpm_to_rad_s(10500)*self.wheel_radius/self.final_ratios[4]
+		#print("velo", velo)
 		index = 0
 
 		static_mass_fr = self.mass*self.weight_dist
 		static_mass_r = self.mass-static_mass_fr
 		accel = 2*c.GRAVITY
+		#print("static_mass_r", static_mass_r)
 
-		downforce = 0
-		drag = 0
+		downforce = c.LIFT_COEF
+		drag = c.CD
 
 		accel_out = []
 		velo_out = []
@@ -233,8 +242,10 @@ class Car:
 		distance = []
 
 		while (velo > 0):
-			downforce = c.LIFT_COEF*velo**2
-			drag = c.CD*velo**2
+			downforce = self.calc_cl(downforce)*velo**2 #NOTE: CHECK HOW LIFT COEF IS CALCULATED
+			drag = self.calc_cd(drag)*velo**2
+			print("downorce, drag", downforce, drag, velo)
+			pdb.set_trace()
 
 			mass_transfer = (accel*self.mass*self.cog_height)
 			weight_transfer = mass_transfer*c.GRAVITY
@@ -262,11 +273,11 @@ class Car:
 				f_app_brakes = self.mass*accel
 				f_app_front = f_app_brakes*self.brake_bias
 				f_app_rear = f_app_brakes*(1-self.brake_bias)
-				print("wheels locking")
+				#print("wheels locking")
 
 			accel = f_app_brakes/self.mass
 			accel_true = accel+(drag/self.mass)
-			print("Ree",velo,accel_true)
+			#print("Ree",velo,accel_true)
 			vel_new = np.sqrt(velo**2 - 2*accel_true*self.step_size)
 			time = np.abs(vel_new-velo)/accel_true
 			distance.append(self.step_size*index)
