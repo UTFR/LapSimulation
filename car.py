@@ -31,7 +31,8 @@ class Car:
 		print("hi")
 		self.final_ratios()
 		self.shift_speed(10000)
-		#print(shift_speeds, self.shift_speeds)
+		print("shift_speeds", self.shift_speeds)
+		# pdb.set_trace()
 
 		accel_dist, time_out_accel, velo_out_accel, accel_out, _ = self.accelerate()
 		decel_dist, time_out_decel, velo_out_decel, accel_out, _, _, _, _ = self.decelerate()
@@ -130,6 +131,8 @@ class Car:
 		return ((torque_high-torque_low)/500)*(car_rpm-c.TORQUE_CURVE[1][torque_index-1]) + torque_low
 
 	def calc_cl(self, downforce):
+		print("============================", 0.5*c.AIR_DENSITY*downforce*self.frontal_area)
+		print(downforce)
 		return 0.5*c.AIR_DENSITY*downforce*self.frontal_area
 
 	def calc_cd(self, drag):
@@ -221,7 +224,7 @@ class Car:
 
 	def decelerate(self):
 		velo = self.rpm_to_rad_s(10500)*self.wheel_radius/self.final_ratios[4]
-		#print("velo", velo)
+		print("velo", velo)
 		index = 0
 
 		static_mass_fr = self.mass*self.weight_dist
@@ -229,8 +232,8 @@ class Car:
 		accel = 2*c.GRAVITY
 		#print("static_mass_r", static_mass_r)
 
-		downforce = c.LIFT_COEF
-		drag = c.CD
+		cl = self.calc_cl(c.LIFT_COEF)
+		cd = self.calc_cd(c.CD)
 
 		accel_out = []
 		velo_out = []
@@ -242,24 +245,38 @@ class Car:
 		distance = []
 
 		while (velo > 0):
-			downforce = self.calc_cl(downforce)*velo**2 #NOTE: CHECK HOW LIFT COEF IS CALCULATED
-			drag = self.calc_cd(drag)*velo**2
-			print("downorce, drag", downforce, drag, velo)
-			pdb.set_trace()
+			downforce = cl*velo**2
+			drag = cd*velo**2
+			print("downforce", downforce, velo, cl)
+			#print("downorce, drag", downforce, drag, velo)
+			#pdb.set_trace()
 
-			mass_transfer = (accel*self.mass*self.cog_height)
+			mass_transfer = (accel*self.mass*self.cog_height)/self.wheel_base
 			weight_transfer = mass_transfer*c.GRAVITY
+			# print("statss")
+			# print(mass_transfer, weight_transfer)
+			# pdb.set_trace()
 
+			print("vars", static_mass_fr, weight_transfer, downforce, self.weight_dist)
 			#tf is going on here
-			f_norm_front_max = c.GRAVITY*static_mass_fr + weight_transfer + downforce*self.weight_dist #check this
-			f_norm_rear_max = c.GRAVITY*static_mass_r - weight_transfer + downforce*(1-self.weight_dist) #check this
+			f_norm_front_max = c.GRAVITY*static_mass_fr + weight_transfer + downforce*self.weight_dist
+			f_norm_rear_max = c.GRAVITY*static_mass_r - weight_transfer + downforce*(1-self.weight_dist) #note: this is (-)
+
+			print("front, rear", f_norm_front_max, f_norm_rear_max)
+			# pdb.set_trace()
 
 			f_front = f_norm_front_max*self.long_tire
 			f_rear = f_norm_rear_max*self.long_tire
 
+			# print("front, rear", f_front, f_rear)
+			# pdb.set_trace()
+
 			f_app_brakes = self.mass*accel
 			f_app_front = f_app_brakes*self.brake_bias
 			f_app_rear = f_app_brakes*(1-self.brake_bias)
+
+			# print(f_app_brakes, f_app_front, f_app_rear)
+			# pdb.set_trace()
 
 			while(f_app_front > f_front or f_app_rear > f_rear):
 				accel -= 0.01
@@ -268,6 +285,9 @@ class Car:
 				f_norm_front = c.GRAVITY*static_mass_fr + weight_transfer + downforce*self.weight_dist
 				f_norm_rear = c.GRAVITY*static_mass_r - weight_transfer + downforce*(1-self.weight_dist)
 
+				# print("hello", mass_transfer, weight_transfer, f_norm_front, f_norm_rear)
+				# pdb.set_trace()
+
 				f_front = f_norm_front*self.long_tire
 				f_rear = f_norm_rear*self.long_tire
 				f_app_brakes = self.mass*accel
@@ -275,12 +295,23 @@ class Car:
 				f_app_rear = f_app_brakes*(1-self.brake_bias)
 				#print("wheels locking")
 
+				# print("hello", f_front, f_rear, f_app_brakes, f_app_front, f_app_rear)
+				# pdb.set_trace()
+
 			accel = f_app_brakes/self.mass
 			accel_true = accel+(drag/self.mass)
-			#print("Ree",velo,accel_true)
+
+			# print("hello", velo, accel, accel_true)
+			# pdb.set_trace()
+
+			print("before", velo**2 - 2*accel_true*self.step_size)
 			vel_new = np.sqrt(velo**2 - 2*accel_true*self.step_size)
+			print("vel_new", vel_new)
 			time = np.abs(vel_new-velo)/accel_true
 			distance.append(self.step_size*index)
+
+			# print("hello", vel_new, time)
+			# pdb.set_trace()
 
 			if(index == 0):
 				velo_out.append(velo)
@@ -296,6 +327,18 @@ class Car:
 			brake_bias_ideal.append(f_front/(f_front+f_rear))
 			velo = vel_new
 			index += 1
+
+		print("stats")
+		print(distance)
+		# #println(time_out)
+		# #println(velo_out)
+		# #println(accel_out)
+		# #println(weight_transfer_out)
+		# #println(force_rear_out)
+		# #println(force_front_out)
+		# #println(brake_bias_ideal)
+
+		# pdb.set_trace()
 
 		return distance, time_out, velo_out, accel_out, weight_transfer_out, force_rear_out, force_front_out, brake_bias_ideal
 
