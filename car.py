@@ -3,7 +3,10 @@ import numpy as np
 from bisect import bisect_left
 import math
 from car_helpers import *
-import pdb;
+import pdb
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 
 class Car:
 	weight_dist = c.WEIGHT_DIST
@@ -16,9 +19,9 @@ class Car:
 	wheel_radius = c.WHEEL_RADIUS
 	aero_balance = c.AERO_BALANCE
 	brake_bias = c.BRAKE_BIAS
-	final_ratios = []
+	final_ratios = [0,0,0,0,math.inf]
 
-	step_size = 0.01
+	step_size = 10#0.01
 	shift_speeds = [0,0,0,0,math.inf] #math.inf is for bisect_left
 	accel_vel = [] #figure out what to do with this?
 	deccel_vel = [] #figure out what to do with this?
@@ -28,11 +31,11 @@ class Car:
 	deccel_dist = []
 
 	def __init__(self):
-		print("hi")
+		#print("hi")
 		self.final_ratios()
 		self.shift_speed(10000)
-		print("shift_speeds", self.shift_speeds)
-		# pdb.set_trace()
+		#print("shift_speeds", self.shift_speeds)
+		#pdb.set_trace()
 
 		accel_dist, time_out_accel, velo_out_accel, accel_out, _ = self.accelerate()
 		decel_dist, time_out_decel, velo_out_decel, accel_out, _, _, _, _ = self.decelerate()
@@ -127,8 +130,9 @@ class Car:
 
 	def linear_interpolation(self,torque_index,car_rpm):
 		torque_low = c.TORQUE_CURVE[1][torque_index-1]
-		torque_high = c.TORQUE_CURVE[1][torque_index+1]
-		return ((torque_high-torque_low)/500)*(car_rpm-c.TORQUE_CURVE[1][torque_index-1]) + torque_low
+		torque_high = c.TORQUE_CURVE[1][torque_index]
+		#print("t_low, t_high", torque_low, torque_high)
+		return ((torque_high-torque_low)/500)*(car_rpm-c.TORQUE_CURVE[0][torque_index-1]) + torque_low
 
 	def calc_cl(self, downforce):
 		print("============================", 0.5*c.AIR_DENSITY*downforce*self.frontal_area)
@@ -141,7 +145,7 @@ class Car:
 	def accelerate(self):
 		#init variables
 		velo = 0
-		accel = 0
+		accel = .0001
 		index = 0
 		torque = 0
 		gear = 0
@@ -158,35 +162,53 @@ class Car:
 		min_velocity = self.rpm_to_rad_s(3000)*self.wheel_radius/self.final_ratios[0]
 		max_gear_velocity = self.rpm_to_rad_s(10500)*self.wheel_radius/self.final_ratios[4]
 
+		# print("min, max", min_velocity, max_gear_velocity)
+		# pdb.set_trace()
+
 		#is car stil accelerating/can still accelerate?
-		while (accel >= 0 and (velo < max_gear_velocity)):
+		while (accel >= 0.0001 and (velo < max_gear_velocity)):
+			#print(accel)
 			#get the torque and gear number depending on rpm
 			if (velo < min_velocity):
 				#first gear
 				torque = c.TORQUE_CURVE[1][0]
 				gear = self.final_ratios[0]
+
+				# print("torque, gear", torque, gear)
+				# pdb.set_trace()
+
 			else:
 				wheel_rpm = self.rad_s_to_rpm(velo/self.wheel_radius)
 				#pick gear based on which range wheel_rpm is in
 				gear_index = bisect_left(self.shift_speeds, velo)
-				gear = self.shift_speeds[gear_index] #check if fancy schmancy bisect_left func works
+				gear = self.final_ratios[gear_index] #check if fancy schmancy bisect_left func works
 				#car_rpm is rpm after shifting gears
 				car_rpm = wheel_rpm*gear
-				#print(car_rpm)
-				#print("hi")
-				#print(c.TORQUE_CURVE[0])
-				#get torque
+
+				# print("hello", wheel_rpm, gear_index, gear, car_rpm, velo)
+				# print(self.shift_speeds)
+				# pdb.set_trace()
+				
 				torque_index = bisect_left(c.TORQUE_CURVE[0], car_rpm) #this line is questionable at best
 				#print(torque_index)
+
+
 				if (car_rpm == c.TORQUE_CURVE[0][torque_index]):
 					torque = c.TORQUE_CURVE[1][torque_index]
 				else:
 					torque = self.linear_interpolation(torque_index,car_rpm)
+
+				# print("torque", torque)
+				# pdb.set_trace()
+
 			#get weight transfer
 			if (velo == 0):
 				weight_transfer = 0
 			else:
 				weight_transfer = accel*self.mass*c.GRAVITY*self.cog_height/self.wheel_base
+
+			# print("w_trans", weight_transfer)
+			# pdb.set_trace()
 
 			downforce = c.LIFT_COEF*velo**2 #check this
 			drag = c.CD*velo**2
@@ -194,12 +216,18 @@ class Car:
 			force_n = (self.mass/2)*c.GRAVITY + weight_transfer + downforce/2 #tf is this?
 			force_tire_max = force_n*self.long_tire
 
+			# print("hi", force_e, downforce, drag, force_n, force_tire_max)
+			# pdb.set_trace()
+
 			#determine if wheel is gripping road
 			if (force_e > force_tire_max):
 				force_applied = force_tire_max
 				print("spinning")
 			else:
 				force_applied = force_e
+
+			# print("force_app", force_applied)
+			# pdb.set_trace()
 
 			#save + update values
 			new_accel = (force_applied-drag)/self.mass
@@ -213,12 +241,21 @@ class Car:
 				velo_out.append(vel_final*3.6) #<-- 3.6 is converting from m/s to km/h
 				velo = vel_final
 
+			print("data", new_accel, velo, max_gear_velocity)
+
 			force_e_out.append(force_e)
 			accel_out.append(new_accel/c.GRAVITY)
 			accel = new_accel
 
 			index += 1
 
+		fig, ax = plt.subplots()
+		ax.plot(distance, velo_out)
+		plt.show()
+
+		# print(distance)
+		# pdb.set_trace()
+		pdb.set_trace()
 		return distance, time_out, velo_out, accel_out, force_e_out
 
 
@@ -328,8 +365,8 @@ class Car:
 			velo = vel_new
 			index += 1
 
-		print("stats")
-		print(distance)
+		# print("stats")
+		# print(distance)
 		# #println(time_out)
 		# #println(velo_out)
 		# #println(accel_out)
