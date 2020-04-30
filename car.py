@@ -249,13 +249,13 @@ class Car:
 
 			index += 1
 
-		fig, ax = plt.subplots()
-		ax.plot(distance, velo_out)
-		plt.show()
+		# fig, ax = plt.subplots()
+		# ax.plot(distance, velo_out)
+		# plt.show()
 
 		# print(distance)
 		# pdb.set_trace()
-		pdb.set_trace()
+		#pdb.set_trace()
 		return distance, time_out, velo_out, accel_out, force_e_out
 
 
@@ -342,7 +342,10 @@ class Car:
 			# pdb.set_trace()
 
 			print("before", velo**2 - 2*accel_true*self.step_size)
-			vel_new = np.sqrt(velo**2 - 2*accel_true*self.step_size)
+			if (velo**2 - 2*accel_true*self.step_size < 0):
+				vel_new = 0
+			else:
+				vel_new = np.sqrt(velo**2 - 2*accel_true*self.step_size)
 			print("vel_new", vel_new)
 			time = np.abs(vel_new-velo)/accel_true
 			distance.append(self.step_size*index)
@@ -382,31 +385,31 @@ class Car:
 	def corner_calc(self, radius, corner_len):
 		new_accel = 1
 		error = 1;
-		max_velo = self.rpm_to_rad_s(c.TORQUE_CURVE[1][-1])*self.wheel_radius/self.final_ratios[-2]
+		max_velo = self.rpm_to_rad_s(c.TORQUE_CURVE[0][-1])*self.wheel_radius/self.final_ratios[-2]
 
 		while(error > 0.001):
 			accel = new_accel
-			velo = np.sqrt(accel*self.wheel_radius)
+			velo = np.sqrt(accel*radius)
 			if(velo > max_velo):
 				velo = max_velo
 				break
 			else:
-				downforce = c.LIFT_COEF*velo**2 #double check this
-				lat_force = (self.mass*c.F_G + downforce)*self.lat_tire
+				downforce = self.calc_cl(c.LIFT_COEF)*velo**2 #double check this
+				lat_force = (self.mass*c.GRAVITY + downforce)*self.lat_tire
 				new_accel = lat_force/self.mass
 				error = np.absolute(new_accel - accel)
 
 		if (velo == max_velo):
 			time = corner_len/velo
 		else:
-			velo = np.sqrt(new_accel*self.radius)
+			velo = np.sqrt(new_accel*radius)
 			time = corner_len/velo
 
 		return time, velo
 
 	def straight_calc(self, length, velo_in, velo_out):
-		a = 1
-		b = 1
+		a = 0
+		b = 0
 
 		while (self.accel_vel[a] < velo_in):
 			a += 1
@@ -423,7 +426,7 @@ class Car:
 				d -= 1
 
 		if (np.abs(self.accel_vel[c]-self.deccel_vel[d]) > 1):
-			print("%d m straight is too short!",length)
+			print(length, "straight is too short!")
 
 		time = (self.accel_time[c]-self.accel_time[a]) + (self.deccel_time[b]-self.deccel_time[d])
 		

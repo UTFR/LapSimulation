@@ -6,24 +6,31 @@ class Competition:
 	data_corner = c.DATA_CORNER
 	data_straight = c.DATA_STRAIGHT
 	car = None
+	num_corners = 0
+	num_straights = 0
 
 	def __init__(self, input_car):
 		self.car = input_car
+		self.num_corners = len(self.data_corner[0])
+		self.num_straights = len(self.data_straight[0])
 
 	def run_endurance(self):
-		corner_velos = np.zeros(len(self.data_corner[1]))
-		corner_times = np.zeros(len(self.data_corner[1]))
+		corner_velos = np.zeros(self.num_corners)
+		corner_times = np.zeros(self.num_corners)
 
-		for i in range(len(self.data_corner[1])):
-			corner_times[i], corner_velos[i] = self.car.corner_calc(self.data_corner[1][i],self.data_corner[2][i])
+		for i in range(self.num_corners):
+			corner_times[i], corner_velos[i] = self.car.corner_calc(self.data_corner[0][i],self.data_corner[1][i])
 
-		straight_times = np.zeros(len(self.data_straight[1]))
-		for i in range(len(self.data_straight[1])):
-			if (i == 1):
+		straight_times = np.zeros(self.num_straights)
+		for i in range(self.num_straights):
+			if (i == 0):
 				straight_times[i] = self.car.straight_calc(self.data_straight[1][i],corner_velos[-1],corner_velos[i])
 			else:
-				straight_times[i] = self.car.straight_calc(self.data_straight[1][i],corner_velos[i-1],corner_velos[i])
+				straight_times[i] = self.car.straight_calc(self.data_straight[0][i],corner_velos[i-1],corner_velos[i])
 		time = np.sum(straight_times) + np.sum(corner_times)
+		# print("time:" ,time/60)
+		print("corner_velos:", corner_velos)
+		print("corner_times:", corner_times)
 
 		return time
 
