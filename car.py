@@ -7,6 +7,7 @@ import pdb
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import csv
 
 class Car:
 	weight_dist = c.WEIGHT_DIST
@@ -21,7 +22,7 @@ class Car:
 	brake_bias = c.BRAKE_BIAS
 	final_ratios = [0,0,0,0,math.inf]
 
-	step_size = 10#0.01
+	step_size = 0.01#0.01
 	shift_speeds = [0,0,0,0,math.inf] #math.inf is for bisect_left
 	accel_vel = [] #figure out what to do with this?
 	deccel_vel = [] #figure out what to do with this?
@@ -135,8 +136,6 @@ class Car:
 		return ((torque_high-torque_low)/500)*(car_rpm-c.TORQUE_CURVE[0][torque_index-1]) + torque_low
 
 	def calc_cl(self, downforce):
-		print("============================", 0.5*c.AIR_DENSITY*downforce*self.frontal_area)
-		print(downforce)
 		return 0.5*c.AIR_DENSITY*downforce*self.frontal_area
 
 	def calc_cd(self, drag):
@@ -166,7 +165,7 @@ class Car:
 		# pdb.set_trace()
 
 		#is car stil accelerating/can still accelerate?
-		while (accel >= 0.0001 and (velo < max_gear_velocity)):
+		while (accel >= 0.000000001 and (velo < max_gear_velocity)): #and index <4:
 			#print(accel)
 			#get the torque and gear number depending on rpm
 			if (velo < min_velocity):
@@ -248,14 +247,22 @@ class Car:
 			accel = new_accel
 
 			index += 1
+			# print("velo_out:", velo_out)
+			# pdb.set_trace()
 
-		# fig, ax = plt.subplots()
-		# ax.plot(distance, velo_out)
-		# plt.show()
-
-		# print(distance)
-		# pdb.set_trace()
+		fig, ax = plt.subplots()
+		ax.plot(distance, velo_out)
+		plt.show()
+		print("data_out:",velo_out)
 		#pdb.set_trace()
+
+		# with open('pyth_data.csv', mode='w') as employee_file:
+		# 	employee_writer = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+		# 	employee_writer.writerow(distance)
+		# 	employee_writer.writerow(velo_out)
+
+
 		return distance, time_out, velo_out, accel_out, force_e_out
 
 
@@ -378,7 +385,10 @@ class Car:
 		# #println(force_front_out)
 		# #println(brake_bias_ideal)
 
-		# pdb.set_trace()
+		fig, ax = plt.subplots()
+		ax.plot(distance, velo_out)
+		plt.show()
+		spdb.set_trace()
 
 		return distance, time_out, velo_out, accel_out, weight_transfer_out, force_rear_out, force_front_out, brake_bias_ideal
 
@@ -408,27 +418,37 @@ class Car:
 		return time, velo
 
 	def straight_calc(self, length, velo_in, velo_out):
-		a = 0
-		b = 0
+		accel_index = 0
+		decel_index = 0
+		print("length", length)
 
-		while (self.accel_vel[a] < velo_in):
-			a += 1
-		while (self.deccel_vel[b] < velo_out):
-			b += 1
+		# print("accel_vel", self.accel_vel)
+		# pdb.set_trace()
 
-		c = a
-		d = b
+		while (self.accel_vel[accel_index] < velo_in):
+			accel_index += 1
+		while (self.deccel_vel[decel_index] < velo_out):
+			decel_index += 1
 
-		while (self.accel_dist[c]-self.accel_dist[a]+self.deccel_dist[b]-self.deccel_dist[d] < length):
-			if (self.accel_vel[c] < self.deccel_vel[d]):
-				c += 1
+		accel_in_new = accel_index
+		decel_in_new = decel_index
+
+		while (self.accel_dist[accel_in_new]-self.accel_dist[accel_index]+ \
+			   self.deccel_dist[decel_index]-self.deccel_dist[decel_in_new] < length):
+			print("index abcd:", accel_index, accel_in_new, decel_index, decel_in_new)
+
+			if (self.accel_vel[accel_in_new] < self.deccel_vel[decel_in_new]):
+				accel_in_new += 1
 			else:
-				d -= 1
+				decel_in_new -= 1
 
-		if (np.abs(self.accel_vel[c]-self.deccel_vel[d]) > 1):
+		if (np.abs(self.accel_vel[accel_in_new]-self.deccel_vel[decel_in_new]) > 1):
 			print(length, "straight is too short!")
+		else:
+			print(length, "fine")
 
-		time = (self.accel_time[c]-self.accel_time[a]) + (self.deccel_time[b]-self.deccel_time[d])
+		time = (self.accel_time[accel_in_new]-self.accel_time[accel_index]) + \
+		(self.deccel_time[decel_index]-self.deccel_time[decel_in_new])
 		
 		return time
 

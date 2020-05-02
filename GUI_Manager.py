@@ -7,14 +7,17 @@ from graph import Graph
 from label import Label
 from entry import Entry
 from dropdown import Dropdown
+import constants as c
 
 class GUI_Manager:
 	frame = None
 	root = None
 	label_dict = {}
 	entry_dict = {}
-	var_names = lis = ["Mass","Brake Bias", "C.O.G. Height", "Brake Bias", "Weight Dist.",\
-			"Aero Balance","Frontal Area","Downforce","Drag","Wheel Base","Lat Tire","Long Tire","Wheel Radius"]
+	var_names = lis = ["Mass","Brake Bias", "C.O.G. Height", "Weight Dist.",\
+			"Aero Balance","Frontal Area","Wheel Base","Lat Tire","Long Tire","Wheel Radius"]
+	constants = [c.MASS, c.BRAKE_BIAS, c.COG_HEIGHT, c.WEIGHT_DIST, c.AERO_BALANCE, c.FRONTAL_AREA, \
+			c.WHEEL_BASE, c.LAT_TIRE, c.LONG_TIRE, c.WHEEL_RADIUS]
 
 	def __init__(self):
 		self.root = tk.Tk()
@@ -28,6 +31,7 @@ class GUI_Manager:
 		self.create_design_page(notebook,1)
 		self.create_simulate_page(notebook,2)
 		self.create_analysis_page(notebook,3)
+		self.set_defaults()
 
 		self.root.mainloop()
 
@@ -63,12 +67,6 @@ class GUI_Manager:
 
 		self.label_dict["Frontal Area"] = Label(aero_frame, "Frontal Area")
 		self.entry_dict["Frontal Area"] = Entry(aero_frame)
-
-		self.label_dict["Downforce"] = Label(aero_frame, "Downforce")
-		self.entry_dict["Downforce"] = Entry(aero_frame)
-
-		self.label_dict["Drag"] = Label(aero_frame, "Drag")
-		self.entry_dict["Drag"] = Entry(aero_frame)
 
 		aero_frame = n.get_frame(2)
 
@@ -109,7 +107,7 @@ class GUI_Manager:
 	def create_simulate_page(self,notebook,page_num):
 		frame = notebook.get_frame(page_num)
 
-		b1 = Button(frame,'SIMULATE')
+		b1 = Button(frame,'SIMULATE',self.update_parameters)
 
 		self.label_dict["# Parameters"] = Label(frame, "Event")
 		w1 = Dropdown(frame, ["Endurance","Acceleration","Skidpad","All"])
@@ -128,6 +126,22 @@ class GUI_Manager:
 		graph_frame = n.get_frame(4)
 		g1 = Graph(graph_frame)
 		g1.plot_2_param([1,2,3],[4,5,6])
+
+	def update_parameters(self):
+		entry_vals = []
+		for entry in self.entry_dict:
+			entry_vals.append(self.entry_dict[entry].read())
+
+		print("entry_vals:" ,entry_vals)
+
+	def set_defaults(self):
+		i=0
+		for entry in self.entry_dict:
+			self.entry_dict[entry].display_val(self.constants[i])
+			self.entry_dict[entry].set_value(self.constants[i])
+			i+=1
+
+
 
 
 

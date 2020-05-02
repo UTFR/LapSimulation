@@ -26,11 +26,13 @@ class Competition:
 			if (i == 0):
 				straight_times[i] = self.car.straight_calc(self.data_straight[1][i],corner_velos[-1],corner_velos[i])
 			else:
-				straight_times[i] = self.car.straight_calc(self.data_straight[0][i],corner_velos[i-1],corner_velos[i])
+				straight_times[i] = self.car.straight_calc(self.data_straight[1][i],corner_velos[i-1],corner_velos[i])
+
+		print("straight_times", straight_times)
 		time = np.sum(straight_times) + np.sum(corner_times)
-		# print("time:" ,time/60)
-		print("corner_velos:", corner_velos)
-		print("corner_times:", corner_times)
+		print("time:" ,time/60)
+		# print("corner_velos:", corner_velos)
+		# print("corner_times:", corner_times)
 
 		return time
 

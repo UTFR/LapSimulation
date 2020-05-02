@@ -8,6 +8,7 @@ class Entry(GUI_Object):
 	x_pos = 0
 	y_pos = 0
 	entry = None
+	value = 0.0
 
 	def __init__(self, frame, text='', width=10):
 		super().__init__(frame)
@@ -21,3 +22,18 @@ class Entry(GUI_Object):
 		
 	def place_object(self,x,y,height=100,width=100):
 		pass
+
+	def read(self):
+		if (self.entry.get() != ''):
+			self.value = float(self.entry.get())
+		return self.value
+
+	def get_value(self):
+		return self.value
+
+	def set_value(self, value):
+		self.value = value
+
+	def display_val(self, val):
+		self.value = val
+		self.entry.insert(0,val)
