@@ -1,6 +1,7 @@
 import constants as c
 from bisect import bisect_left
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Competition:
 	data_corner = c.DATA_CORNER
@@ -22,16 +23,31 @@ class Competition:
 			corner_times[i], corner_velos[i] = self.car.corner_calc(self.data_corner[0][i],self.data_corner[1][i])
 
 		straight_times = np.zeros(self.num_straights)
+		velo_graph = []
+		dist_graph = []
+		accel = []
+		decel = []
+
 		for i in range(self.num_straights):
 			if (i == 0):
-				straight_times[i] = self.car.straight_calc(self.data_straight[1][i],corner_velos[-1],corner_velos[i])
+				straight_times[i], accel, decel = self.car.straight_calc(corner_velos[-1],corner_velos[i])
 			else:
-				straight_times[i] = self.car.straight_calc(self.data_straight[1][i],corner_velos[i-1],corner_velos[i])
+				straight_times[i], accel, decel = self.car.straight_calc(corner_velos[i-1],corner_velos[i])
 
-		print("straight_times", straight_times)
-		time = np.sum(straight_times) + np.sum(corner_times)
-		print("time:" ,time/60)
-		# print("corner_velos:", corner_velos)
+			velo_graph = velo_graph + accel + decel
+
+		print("===",corner_velos)
+		dist_graph = np.arange(0, (len(velo_graph))*0.1, 0.1)
+
+		fig, ax = plt.subplots()
+		ax.plot(dist_graph, velo_graph)
+		plt.show()
+		pdb.set_trace()
+
+		# print("straight_times", straight_times)
+		# time = np.sum(straight_times) + np.sum(corner_times)
+		# print("time:" ,time/60)
+		# print("corner_velos:", cornser_velos)
 		# print("corner_times:", corner_times)
 
 		return time

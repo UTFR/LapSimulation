@@ -240,7 +240,7 @@ class Car:
 				velo_out.append(vel_final*3.6) #<-- 3.6 is converting from m/s to km/h
 				velo = vel_final
 
-			print("data", new_accel, velo, max_gear_velocity)
+			#print("data", new_accel, velo, max_gear_velocity)
 
 			force_e_out.append(force_e)
 			accel_out.append(new_accel/c.GRAVITY)
@@ -250,10 +250,10 @@ class Car:
 			# print("velo_out:", velo_out)
 			# pdb.set_trace()
 
-		fig, ax = plt.subplots()
-		ax.plot(distance, velo_out)
-		plt.show()
-		print("data_out:",velo_out)
+		# fig, ax = plt.subplots()
+		# ax.plot(distance, velo_out)
+		# plt.show()
+		# print("data_out:",velo_out)
 		#pdb.set_trace()
 
 		# with open('pyth_data.csv', mode='w') as employee_file:
@@ -266,7 +266,7 @@ class Car:
 		return distance, time_out, velo_out, accel_out, force_e_out
 
 
-	def decelerate(self):
+	def decelerate0(self):
 		velo = self.rpm_to_rad_s(10500)*self.wheel_radius/self.final_ratios[4]
 		print("velo", velo)
 		index = 0
@@ -287,11 +287,11 @@ class Car:
 		force_front_out = []
 		brake_bias_ideal = []
 		distance = []
-
+		i=0
 		while (velo > 0):
 			downforce = cl*velo**2
 			drag = cd*velo**2
-			print("downforce", downforce, velo, cl)
+			#print("downforce", downforce, velo, cl)
 			#print("downorce, drag", downforce, drag, velo)
 			#pdb.set_trace()
 
@@ -300,21 +300,20 @@ class Car:
 			# print("statss")
 			# print(mass_transfer, weight_transfer)
 			# pdb.set_trace()
+			# print("vars", static_mass_fr, weight_transfer, downforce, self.weight_dist)
 
-			print("vars", static_mass_fr, weight_transfer, downforce, self.weight_dist)
-			#tf is going on here
+			# Calculate the maximum possible braking forces on front and rear available from friction.
 			f_norm_front_max = c.GRAVITY*static_mass_fr + weight_transfer + downforce*self.weight_dist
 			f_norm_rear_max = c.GRAVITY*static_mass_r - weight_transfer + downforce*(1-self.weight_dist) #note: this is (-)
-
-			print("front, rear", f_norm_front_max, f_norm_rear_max)
-			# pdb.set_trace()
-
 			f_front = f_norm_front_max*self.long_tire
 			f_rear = f_norm_rear_max*self.long_tire
-
+			# print("front, rear", f_norm_front_max, f_norm_rear_max)
+			# pdb.set_trace()
 			# print("front, rear", f_front, f_rear)
 			# pdb.set_trace()
+			i+=1
 
+			# Now calculate the amount of forve you are trying to apply from braking??
 			f_app_brakes = self.mass*accel
 			f_app_front = f_app_brakes*self.brake_bias
 			f_app_rear = f_app_brakes*(1-self.brake_bias)
@@ -326,8 +325,8 @@ class Car:
 				accel -= 0.01
 				mass_transfer = accel*self.mass*self.cog_height/self.wheel_base
 				weight_transfer = mass_transfer*c.GRAVITY
-				f_norm_front = c.GRAVITY*static_mass_fr + weight_transfer + downforce*self.weight_dist
-				f_norm_rear = c.GRAVITY*static_mass_r - weight_transfer + downforce*(1-self.weight_dist)
+				f_norm_front = c.GRAVITY*static_mass_fr - weight_transfer + downforce*self.weight_dist
+				f_norm_rear = c.GRAVITY*static_mass_r + weight_transfer + downforce*(1-self.weight_dist)
 
 				# print("hello", mass_transfer, weight_transfer, f_norm_front, f_norm_rear)
 				# pdb.set_trace()
@@ -348,12 +347,12 @@ class Car:
 			# print("hello", velo, accel, accel_true)
 			# pdb.set_trace()
 
-			print("before", velo**2 - 2*accel_true*self.step_size)
+			#print("before", velo**2 - 2*accel_true*self.step_size)
 			if (velo**2 - 2*accel_true*self.step_size < 0):
 				vel_new = 0
 			else:
 				vel_new = np.sqrt(velo**2 - 2*accel_true*self.step_size)
-			print("vel_new", vel_new)
+			#print("vel_new", vel_new)
 			time = np.abs(vel_new-velo)/accel_true
 			distance.append(self.step_size*index)
 
@@ -391,6 +390,110 @@ class Car:
 		spdb.set_trace()
 
 		return distance, time_out, velo_out, accel_out, weight_transfer_out, force_rear_out, force_front_out, brake_bias_ideal
+
+	def decelerate(self):
+
+		velo = self.rpm_to_rad_s(10500)*self.wheel_radius/self.final_ratios[4]
+		#print("velo", velo, self.mass)
+		#pdb.set_trace()
+
+		time = 0
+		distance = 0
+		index = 0
+
+		#self.brake_bias = 0.5
+
+		static_mass_fr = self.mass*self.weight_dist
+		static_mass_r = self.mass-static_mass_fr
+
+		cl = self.calc_cl(c.LIFT_COEF)
+		cd = self.calc_cd(c.CD)
+		#cl = 0
+		#cd = 0
+
+		accel_out = []
+		velo_out = []
+		time_out = []
+		weight_transfer_out = []
+		force_rear_out = []
+		force_front_out = []
+		brake_bias_ideal_out = []
+		distance_out = []
+
+		while (velo > 0):
+
+			downforce = cl*velo**2
+			drag = cd*velo**2
+			#print("downforce", downforce, velo, cl)
+			#print("downorce, drag", downforce, drag, velo)
+			#pdb.set_trace()
+
+			# Calculate max acceleration as limited by down force on front and rear wheels due to friction
+			# We use the following notation:
+			# Max lateral force from front wheel due to friction = K1f + K2f * accel
+			# Max lateral force from rear  wheel due to friction = K1r + K2r * accel
+            # Force on front wheel to achieve braking acceleration = mass * brake_bias * abs(accel)
+            # Force on rear  wheel to achieve braking acceleration = mass * (1-brake_bias) * abs(accel)
+            # Max decceleration that can be achieved limited by friction on front wheel is
+            #   acccel_limit_front = - K1f / (mass * brake_bias + K2f)
+            #   acccel_limit_rear  = - K1r / (mass * (1-brake_bias) + K2r)
+            #   acccel = max(acccel_limit_front,acccel_limit_rear). # both negative
+
+			mass_transfer = (self.mass*self.cog_height)/self.wheel_base
+
+			K1f =   self.long_tire * (static_mass_fr * c.GRAVITY + downforce * self.weight_dist)
+			K1r =   self.long_tire * (static_mass_r * c.GRAVITY + downforce * (1-self.weight_dist))
+			K2f = - self.long_tire * (self.mass * self.cog_height / self.wheel_base)
+			K2r =   self.long_tire * (self.mass * self.cog_height / self.wheel_base)
+			accel_limit_front = K1f / (self.mass * self.brake_bias + K2f)
+			accel_limit_rear  = K1r / (self.mass * self.brake_bias + K2r)
+			accel = max(accel_limit_front, accel_limit_rear)  # both shoudl be negative
+			accel_true = accel+(drag/self.mass)
+			print("accel",accel)
+
+			#print("before", velo**2 - 2*accel_true*self.step_size)
+			if (velo**2 - 2*accel_true*self.step_size < 0):
+				velo_new = 0
+				print("index",index)
+			else:
+				velo_new = np.sqrt(velo**2 - 2*accel_true*self.step_size)
+				print("====velo_new",velo_new)
+			#print("vel_new", vel_new)
+			time += np.abs(velo_new-velo)/accel_true
+			distance += self.step_size
+
+			# print("hello", vel_new, time)
+			# pdb.set_trace()
+			velo_out.append(3.6*velo)
+			time_out.append(time)
+			distance_out.append(distance)
+			accel_out.append(accel_true/c.GRAVITY)
+			#weight_transfer_out.append(mass_transfer)
+			#force_rear_out.append(f_app_rear)
+			#force_front_out.append(f_app_front)
+			#brake_bias_ideal.append(f_front/(f_front+f_rear))
+			brake_bias_ideal = []
+			velo = velo_new
+			index += 1
+
+		# print("stats")
+		# print(distance)
+		# #println(time_out)
+		# #println(velo_out)
+		# #println(accel_out)
+		# #println(weight_transfer_out)
+		# #println(force_rear_out)
+		# #println(force_front_out)
+		# #println(brake_bias_ideal)
+
+		fig, ax = plt.subplots()
+		ax.plot(distance_out, velo_out)
+		plt.show()
+		#pdb.set_trace()
+
+		#self.decelerate0()
+
+		return distance_out, time_out, velo_out, accel_out, weight_transfer_out, force_rear_out, force_front_out, brake_bias_ideal
 
 	def corner_calc(self, radius, corner_len):
 		new_accel = 1
